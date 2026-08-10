@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Float‑or‑Sink Sprint (Web)</title>
+  <style>
+    :root { --bg:#0b1320; --panel:#ffffff; --ink:#111725; --muted:#4b5563; --accent:#2563eb; --accent2:#10b981; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    body { margin:0; background:linear-gradient(180deg,#0b1320,#101828); color:#0b1220; display:grid; place-items:center; min-height:100vh; }
+    .app { width: min(1100px, 98vw); background: var(--panel); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; display: grid; grid-template-columns: 320px 1fr; }
+    .left { padding: 18px 18px 14px; border-right: 1px solid #eef2f7; background: #fbfdff; }
+    h1 { font-size: 20px; margin: 0 0 10px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    label { font-size: 13px; color: #1f2937; display: block; margin-top: 10px; margin-bottom: 6px; font-weight: 600; }
+    select, input[type="number"], button { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #e5e7eb; background: white; font-size: 14px; }
+    button { cursor: pointer; border: none; color: white; background: var(--accent); transition: transform .02s ease-in-out, box-shadow .15s; box-shadow: 0 6px 16px rgba(37,99,235,.25); font-weight: 600; }
+    button.secondary { background: #0ea5e9; }
+    button.ghost { background: #6b7280; }
+    button.flat { background: #9ca3af; }
+    .row { display:flex; gap:10px; }
+    .row > * { flex:1; }
+    .pill { display:inline-flex; gap:8px; align-items:center; background:#eef2ff; color:#374151; padding:6px 10px; border-radius:999px; font-size:12px; }
+    .scorebar { display:flex; gap:10px; align-items:center; margin-top:10px; }
+    .scorebar .box { background:#f1f5f9; border-radius:10px; padding:10px; text-align:center; flex:1; font-weight:700; }
+    .feedback { margin-top:10px; font-weight:700; font-size:14px; min-height:24px; }
+    .right { padding: 16px; position: relative; background: #f8fafc; }
+    canvas { width:100%; height:100%; background: #eaf3ff; border-radius: 14px; display:block; }
+    .tankWrap { height: 520px; background:linear-gradient(#f8fbff, #ecf2fb); border:1px solid #e5e7eb; border-radius: 14px; padding: 10px; }
+    .legend { position:absolute; top: 20px; right: 24px; background: #ffffffd9; border:1px solid #e5e7eb; padding: 10px 12px; border-radius: 12px; font-size: 12px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; background:#111827; color:white; padding:2px 6px; border-radius:6px; }
+    .tiny { font-size:12px; color:#6b7280 }
+    .coachCard { grid-column:1 / -1; padding:18px; border-top:1px solid #e5e7eb; background:linear-gradient(135deg,#f8fbff,#eef6ff); }
+    .coachHeader { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .coachTitle { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; color:#172554; }
+    .coachIcon { display:grid; place-items:center; width:36px; height:36px; border-radius:12px; color:white; background:linear-gradient(135deg,#2563eb,#7c3aed); box-shadow:0 8px 18px rgba(37,99,235,.2); }
+    .coachStatus { display:inline-flex; align-items:center; gap:6px; color:#475569; font-size:12px; }
+    .coachStatus::before { content:""; width:8px; height:8px; border-radius:50%; background:#f59e0b; }
+    .coachStatus.online::before { background:#10b981; }
+    .coachLog { height:210px; overflow:auto; padding:12px; border:1px solid #dbe5f1; border-radius:12px; background:#fff; }
+    .coachMsg { max-width:88%; width:fit-content; padding:9px 11px; margin:0 0 9px; border-radius:12px; font-size:14px; line-height:1.45; white-space:pre-wrap; }
+    .coachMsg.coach { color:#1e3a8a; background:#eff6ff; border:1px solid #dbeafe; }
+    .coachMsg.user { margin-left:auto; color:#fff; background:#2563eb; }
+    .coachMsg.pending { color:#64748b; font-style:italic; }
+    .coachChips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .coachChips button { width:auto; padding:7px 10px; color:#1d4ed8; background:#fff; border:1px solid #bfdbfe; box-shadow:none; font-size:12px; }
+    .coachForm { display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:10px; }
+    .coachForm textarea { min-height:58px; resize:vertical; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font:inherit; }
+    .coachForm button { width:96px; }
+    .coachNote { margin-top:7px; color:#64748b; font-size:11px; }
+    footer { grid-column: 1 / -1; padding: 10px 16px 16px; font-size: 12px; color: #6b7280; text-align:center; }
+    @media (max-width:760px) {
+      body { display:block; }
+      .app { width:100%; min-height:100vh; border-radius:0; grid-template-columns:1fr; }
+      .left { border-right:0; border-bottom:1px solid #eef2f7; }
+      .tankWrap { height:430px; }
+      .coachForm { grid-template-columns:1fr; }
+      .coachForm button { width:100%; }
+      .coachMsg { max-width:96%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="left">
+      <h1>Float‑or‑Sink Sprint <span class="pill">Archimedes ★</span></h1>
+      <div class="muted">Pick an object → predict → <b>Drop</b>. Score for correct calls before time runs out.</div>
+
+      <label>Object</label>
+      <select id="objectSelect"></select>
+      <div id="objInfo" class="tiny" style="margin-top:6px; line-height:1.3"></div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="predictFloat" class="secondary">Predict FLOAT</button>
+        <button id="predictSink" class="ghost">Predict SINK</button>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="dropBtn">Drop</button>
+        <button id="resetBtn" class="flat">Reset</button>
+      </div>
+
+      <label style="margin-top:12px">Water density (kg/m³)</label>
+      <div class="row">
+        <input id="rhoFluid" type="number" step="1" min="100" max="2000" value="1000" />
+        <button id="applyRho" class="ghost" title="Apply">Apply</button>
+      </div>
+      <div class="tiny" style="margin-top:6px">Try 1025 for seawater.</div>
+
+      <div class="scorebar">
+        <div class="box">Score<br><span id="score">0</span></div>
+        <div class="box">Time<br><span id="time">90</span>s</div>
+      </div>
+      <div id="feedback" class="feedback" style="color:#065f46">Make a prediction, then press Drop!</div>
+
+      <details style="margin-top:10px">
+        <summary><b>How it works</b></summary>
+        <div class="tiny" style="margin-top:6px; line-height:1.45">
+          Buoyant force equals weight of displaced fluid. If <span class="kbd">ρ<sub>obj</sub> &lt; ρ<sub>fluid</sub></span>, it floats with immersed fraction
+          <span class="kbd">f = ρ<sub>obj</sub> / ρ<sub>fluid</sub></span>. Otherwise, it sinks.
+        </div>
+      </details>
+    </div>
+
+    <div class="right">
+      <div class="legend">ρ<sub>water</sub> = <span id="rhoHud">1000</span> kg/m³</div>
+      <div class="tankWrap">
+        <canvas id="tank" width="700" height="500"></canvas>
+      </div>
+    </div>
+
+    <section class="coachCard" aria-labelledby="coachTitle">
+      <div class="coachHeader">
+        <div class="coachTitle" id="coachTitle"><span class="coachIcon">AI</span> AI Coach</div>
+        <span class="coachStatus" id="coachStatus">Checking server…</span>
+      </div>
+      <div class="coachLog" id="coachLog" aria-live="polite"></div>
+      <div class="coachChips" aria-label="Suggested questions">
+        <button type="button" data-question="Why does the selected object float or sink?">Explain this object</button>
+        <button type="button" data-question="Calculate the immersed fraction for this object.">Calculate immersed fraction</button>
+        <button type="button" data-question="How does changing the fluid density affect the result?">Change the fluid density</button>
+        <button type="button" data-question="Challenge me with a short buoyancy question.">Challenge me</button>
+      </div>
+      <form class="coachForm" id="coachForm">
+        <textarea id="coachQuestion" maxlength="800" placeholder="Ask about buoyancy, density, Archimedes' principle, or the current object…" aria-label="Question for the AI Coach"></textarea>
+        <button type="submit" id="coachSend">Ask</button>
+      </form>
+      <div class="coachNote">The coach uses the selected object and current fluid density. Your OpenAI API key stays on the server.</div>
+    </section>
+
+  </div>
+
+  <script>
+    // ------------------ Model ------------------
+    const objects = [
+      { name: 'Balsa wood block', rho:160, size:0.10 },
+      { name: 'Pine block', rho:500, size:0.10 },
+      { name: 'Acrylic cube', rho:1180, size:0.10 },
+      { name: 'Aluminum block', rho:2700, size:0.08 },
+      { name: 'Sealed plastic bottle', rho:920, size:0.12 },
+      { name: 'Wet sponge cube', rho:1030, size:0.10 },
+      { name: 'Candle wax block', rho:900, size:0.10 },
+      { name: 'PVC cube', rho:1350, size:0.09 },
+    ];
+
+    const CFG = { 
+      rhoFluid: 1000, countdown: 90,
+      tank: { x: 60, y: 40, w: 580, h: 420, waterFill: 0.55 },
+      dropSpeed: 6, dt: 16, // ms
+    };
+
+    // ------------------ State ------------------
+    let state = {
+      score: 0, timeLeft: CFG.countdown, running: false,
+      prediction: null, active: null, busy:false,
+    };
+
+    // ------------------ DOM ------------------
+    const sel = id => document.getElementById(id);
+    const objectSelect = sel('objectSelect');
+    const objInfo = sel('objInfo');
+    const predictFloat = sel('predictFloat');
+    const predictSink = sel('predictSink');
+    const dropBtn = sel('dropBtn');
+    const resetBtn = sel('resetBtn');
+    const rhoFluid = sel('rhoFluid');
+    const applyRho = sel('applyRho');
+    const scoreEl = sel('score');
+    const timeEl = sel('time');
+    const feedback = sel('feedback');
+    const rhoHud = sel('rhoHud');
+    const coachForm = sel('coachForm');
+    const coachQuestion = sel('coachQuestion');
+    const coachSend = sel('coachSend');
+    const coachLog = sel('coachLog');
+    const coachStatus = sel('coachStatus');
+
+    const canvas = sel('tank');
+    const ctx = canvas.getContext('2d');
+
+    // ------------------ Init ------------------
+    objects.forEach((o,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = o.name; objectSelect.appendChild(opt);
+    });
+    objectSelect.value = 0;
+    updateObjInfo();
+    drawTank();
+
+    let timerId = null;
+    startTimer();
+
+    // ------------------ Event Handlers ------------------
+    objectSelect.addEventListener('change', updateObjInfo);
+    predictFloat.addEventListener('click', ()=> setPrediction('float'));
+    predictSink.addEventListener('click', ()=> setPrediction('sink'));
+    dropBtn.addEventListener('click', dropObject);
+    resetBtn.addEventListener('click', resetGame);
+    applyRho.addEventListener('click', ()=>{ 
+      const v = Number(rhoFluid.value)||1000; 
+      CFG.rhoFluid = Math.max(100, Math.min(2000, v));
+      rhoHud.textContent = Math.round(CFG.rhoFluid);
+      drawTank();
+      flash(feedback, 'Water density updated.', '#0f766e');
+    });
+
+    // ------------------ Functions ------------------
+    function updateObjInfo(){
+      const o = objects[Number(objectSelect.value)];
+      objInfo.innerHTML = `Density: <b>${o.rho.toFixed(0)}</b> kg/m³ · Size: <b>${o.size.toFixed(2)}</b> m<br>
+      Rule: if ρ<sub>obj</sub> &lt; ρ<sub>fluid</sub> → <b>floats</b>; else → <b>sinks</b>.`;
+    }
+
+    function setPrediction(p){
+      if (state.busy) return;
+      state.prediction = p;
+      if (p==='float') flash(feedback,'Prediction set: FLOAT','#065f46');
+      else flash(feedback,'Prediction set: SINK','#7f1d1d');
+    }
+
+    function dropObject(){
+      if (state.busy) return;
+      if (state.timeLeft<=0) return;
+      if (!state.prediction){ flash(feedback,'Pick a prediction first!','#7f1d1d'); return; }
+      const o = objects[Number(objectSelect.value)];
+      const willFloat = o.rho < CFG.rhoFluid;
+      const outcome = willFloat? 'float':'sink';
+
+      // Create visual block
+      const visH = Math.min(0.18, 0.35 * o.size / Math.max(...objects.map(x=>x.size))) * CFG.tank.h; // proportional
+      const visW = visH;
+      const spawnX = CFG.tank.x + 60 + Math.random()*(CFG.tank.w - 120 - visW);
+      let y = 20; // top of canvas
+
+      state.active = { x: spawnX, y: y, w: visW, h: visH, outcome, o };
+      state.busy = true;
+
+      const waterH = CFG.tank.h * CFG.tank.waterFill;
+      const waterY = CFG.tank.y + CFG.tank.h - waterH; // water surface Y (top of water)
+      const floorY = CFG.tank.y + CFG.tank.h - 4;
+
+      let targetY;
+      if (willFloat){
+        const f = clamp(o.rho / CFG.rhoFluid, 0, 1);
+        const subH = f * visH;                 // submerged depth
+        const topY = waterY - (visH - subH);   // place block so waterline cuts at subH
+        targetY = topY;                        // top-left y of block
+      } else {
+        targetY = floorY - visH;
+      }
+
+      const step = ()=>{
+        drawTank();
+        // animate
+        if (y < targetY) y = targetY; else y -= 0; // not used
+        if (state.active.y < targetY) state.active.y += CFG.dropSpeed;
+        if (state.active.y >= targetY - 0.5) {
+          state.active.y = targetY;
+          renderBlock(state.active);
+          // Score
+          if (outcome === state.prediction) { state.score++; flash(feedback,`Correct! It ${outcome.toUpperCase()}.`,'#065f46'); }
+          else { flash(feedback,`Oops—It ${outcome.toUpperCase()}.`,'#7f1d1d'); }
+          scoreEl.textContent = state.score;
+          state.prediction = null;
+          state.busy = false;
+          return;
+        }
+        renderBlock(state.active);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function renderBlock(b){
+      // block
+      ctx.fillStyle = '#d1d5db'; ctx.strokeStyle = '#111827'; ctx.lineWidth = 2;
+      ctx.fillRect(b.x, b.y, b.w, b.h); ctx.strokeRect(b.x, b.y, b.w, b.h);
+    }
+
+    function drawTank(){
+      ctx.clearRect(0,0,canvas.width, canvas.height);
+      // frame
+      ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+      ctx.strokeRect(CFG.tank.x, CFG.tank.y, CFG.tank.w, CFG.tank.h);
+      // water
+      const waterH = CFG.tank.h * CFG.tank.waterFill;
+      const waterY = CFG.tank.y + CFG.tank.h - waterH;
+      const grad = ctx.createLinearGradient(0, waterY, 0, waterY+waterH);
+      grad.addColorStop(0,'#cfe9ff'); grad.addColorStop(1,'#a6d3ff');
+      ctx.fillStyle = grad; ctx.fillRect(CFG.tank.x, waterY, CFG.tank.w, waterH);
+      // waterline
+      ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(CFG.tank.x, waterY); ctx.lineTo(CFG.tank.x+CFG.tank.w, waterY); ctx.stroke();
+      // floor shadow
+      ctx.fillStyle = 'rgba(15,23,42,0.06)';
+      ctx.fillRect(CFG.tank.x, CFG.tank.y+CFG.tank.h-6, CFG.tank.w, 6);
+    }
+
+    function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+
+    function startTimer(){
+      if (timerId) clearInterval(timerId);
+      state.timeLeft = CFG.countdown; timeEl.textContent = state.timeLeft;
+      timerId = setInterval(()=>{
+        if (state.timeLeft<=0){ clearInterval(timerId); flash(feedback,`Time up! Final score: ${state.score}.`,'#111827'); return; }
+        state.timeLeft--; timeEl.textContent = state.timeLeft;
+      }, 1000);
+    }
+
+    function resetGame(){
+      state.score = 0; scoreEl.textContent = 0; state.prediction = null; state.busy = false; 
+      state.active = null; drawTank(); updateObjInfo(); 
+      startTimer();
+      flash(feedback,'Make a prediction, then press Drop!','#065f46');
+    }
+
+    function flash(el, text, color){ el.textContent = text; el.style.color = color || '#111827'; }
+
+    // ------------------ AI Coach ------------------
+    const coachHistory = [];
+
+    function getCoachSessionId(){
+      const key = 'ce2134CoachSessionId';
+      try {
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = `session-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
+          localStorage.setItem(key, id);
+        }
+        return id;
+      } catch {
+        return `session-${Date.now()}`;
+      }
+    }
+
+    function coachContext(){
+      const object = objects[Number(objectSelect.value)];
+      const floats = object.rho < CFG.rhoFluid;
+      const fraction = object.rho / CFG.rhoFluid;
+      return {
+        objectName: object.name,
+        objectDensity: object.rho,
+        objectSize: object.size,
+        fluidDensity: CFG.rhoFluid,
+        prediction: state.prediction || 'none',
+        outcome: floats ? 'floats' : 'sinks',
+        immersedFraction: floats ? Number(fraction.toFixed(3)) : null,
+        score: state.score,
+        timeLeft: state.timeLeft,
+      };
+    }
+
+    function addCoachMessage(role, text, extraClass=''){
+      const div = document.createElement('div');
+      div.className = `coachMsg ${role} ${extraClass}`.trim();
+      div.textContent = `${role === 'user' ? 'You' : 'Coach'}: ${text}`;
+      coachLog.appendChild(div);
+      coachLog.scrollTop = coachLog.scrollHeight;
+      return div;
+    }
+
+    function builtInCoachReply(question){
+      const c = coachContext();
+      const q = question.toLowerCase();
+      const ratio = (c.objectDensity / c.fluidDensity).toFixed(2);
+
+      if (q.includes('challenge')) {
+        return `Try this: ${c.objectName} has density ${c.objectDensity} kg/m³. What is the smallest fluid density that would make it float? Explain using ρobject < ρfluid.`;
+      }
+      if (q.includes('fraction') || q.includes('calculate') || q.includes('submerge')) {
+        if (c.outcome === 'sinks') return `${c.objectName} sinks because ${c.objectDensity} ≥ ${c.fluidDensity} kg/m³, so a stable floating immersed fraction does not exist in this fluid.`;
+        return `For a floating object, immersed fraction = ρobject / ρfluid = ${c.objectDensity} / ${c.fluidDensity} = ${ratio}. About ${(Number(ratio) * 100).toFixed(0)}% of its volume is submerged.`;
+      }
+      if (q.includes('fluid') || q.includes('water') || q.includes('density')) {
+        return `Increasing fluid density increases buoyant force for the same displaced volume. The object floats when ρobject < ρfluid. Here, ${c.objectDensity} ${c.outcome === 'floats' ? '<' : '≥'} ${c.fluidDensity} kg/m³, so it ${c.outcome}.`;
+      }
+      return `${c.objectName} ${c.outcome} because its density (${c.objectDensity} kg/m³) is ${c.outcome === 'floats' ? 'less than' : 'not less than'} the fluid density (${c.fluidDensity} kg/m³). Archimedes' principle says the buoyant force equals the weight of displaced fluid.`;
+    }
+
+    async function askCoach(question){
+      question = String(question || '').trim();
+      if (!question) return;
+
+      const priorHistory = coachHistory.slice(-8);
+      addCoachMessage('user', question);
+      coachHistory.push({ role:'user', content:question });
+      const pending = addCoachMessage('coach', 'Thinking…', 'pending');
+      coachQuestion.value = '';
+      coachSend.disabled = true;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({
+            question,
+            context:coachContext(),
+            history:priorHistory,
+            sessionId:getCoachSessionId(),
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'AI Coach is unavailable.');
+        const reply = data.reply || builtInCoachReply(question);
+        pending.classList.remove('pending');
+        pending.textContent = `Coach: ${reply}`;
+        coachHistory.push({ role:'assistant', content:reply });
+        coachStatus.textContent = 'AI online';
+        coachStatus.classList.add('online');
+      } catch {
+        const reply = builtInCoachReply(question);
+        pending.classList.remove('pending');
+        pending.textContent = `Coach: ${reply}\n\n(Built-in guidance shown; connect the Render server and OPENAI_API_KEY for AI replies.)`;
+        coachHistory.push({ role:'assistant', content:reply });
+        coachStatus.textContent = 'Built-in mode';
+        coachStatus.classList.remove('online');
+      } finally {
+        coachSend.disabled = false;
+        coachQuestion.focus();
+        coachLog.scrollTop = coachLog.scrollHeight;
+      }
+    }
+
+    coachForm.addEventListener('submit', event => {
+      event.preventDefault();
+      askCoach(coachQuestion.value);
+    });
+    coachQuestion.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        coachForm.requestSubmit();
+      }
+    });
+    document.querySelectorAll('.coachChips [data-question]').forEach(button => {
+      button.addEventListener('click', () => askCoach(button.dataset.question));
+    });
+
+    addCoachMessage('coach', 'Hi! I can use the selected object and fluid density to help you reason about floating, sinking, buoyant force, and immersed fraction.');
+    fetch('/api/health')
+      .then(response => { if (!response.ok) throw new Error(); return response.json(); })
+      .then(data => {
+        coachStatus.textContent = data.aiConfigured ? 'AI online' : 'Built-in mode';
+        coachStatus.classList.toggle('online', Boolean(data.aiConfigured));
+      })
+      .catch(() => { coachStatus.textContent = 'Built-in mode'; });
+  </script>
+</body>
+</html>
+
