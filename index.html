@@ -47,7 +47,6 @@
     .coachForm { display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:10px; }
     .coachForm textarea { min-height:58px; resize:vertical; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font:inherit; }
     .coachForm button { width:96px; }
-    .coachNote { margin-top:7px; color:#64748b; font-size:11px; }
     footer { grid-column: 1 / -1; padding: 10px 16px 16px; font-size: 12px; color: #6b7280; text-align:center; }
     @media (max-width:760px) {
       body { display:block; }
@@ -93,13 +92,6 @@
       </div>
       <div id="feedback" class="feedback" style="color:#065f46">Make a prediction, then press Drop!</div>
 
-      <details style="margin-top:10px">
-        <summary><b>How it works</b></summary>
-        <div class="tiny" style="margin-top:6px; line-height:1.45">
-          Buoyant force equals weight of displaced fluid. If <span class="kbd">ρ<sub>obj</sub> &lt; ρ<sub>fluid</sub></span>, it floats with immersed fraction
-          <span class="kbd">f = ρ<sub>obj</sub> / ρ<sub>fluid</sub></span>. Otherwise, it sinks.
-        </div>
-      </details>
     </div>
 
     <div class="right">
@@ -125,7 +117,6 @@
         <textarea id="coachQuestion" maxlength="800" placeholder="Ask about buoyancy, density, Archimedes' principle, or the current object…" aria-label="Question for the AI Coach"></textarea>
         <button type="submit" id="coachSend">Ask</button>
       </form>
-      <div class="coachNote">The coach uses the selected object and current fluid density. Your OpenAI API key stays on the server.</div>
     </section>
 
   </div>
@@ -207,8 +198,7 @@
     // ------------------ Functions ------------------
     function updateObjInfo(){
       const o = objects[Number(objectSelect.value)];
-      objInfo.innerHTML = `Density: <b>${o.rho.toFixed(0)}</b> kg/m³ · Size: <b>${o.size.toFixed(2)}</b> m<br>
-      Rule: if ρ<sub>obj</sub> &lt; ρ<sub>fluid</sub> → <b>floats</b>; else → <b>sinks</b>.`;
+      objInfo.innerHTML = `Density: <b>${o.rho.toFixed(0)}</b> kg/m³ · Size: <b>${o.size.toFixed(2)}</b> m`;
     }
 
     function setPrediction(p){
